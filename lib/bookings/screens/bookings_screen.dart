@@ -48,6 +48,30 @@ class _BookingsScreenState extends State<BookingsScreen> {
     return AppTheme.primary;
   }
 
+  Color paymentStatusColor(String? status) {
+    switch (status?.toUpperCase()) {
+      case 'PAID':
+        return Colors.green;
+      case 'PARTIALLY_PAID':
+        return Colors.orange;
+      default:
+        return Colors.red;
+    }
+  }
+
+  String formatAmount(dynamic value) {
+    final amount = value is num
+        ? value.toDouble()
+        : double.tryParse(value?.toString() ?? '') ?? 0.0;
+    return '₹${amount.toStringAsFixed(2)}';
+  }
+
+  String formatPaymentMode(dynamic value) {
+    final mode = value?.toString().trim() ?? '';
+    if (mode.isEmpty) return 'Not selected';
+    return mode.replaceAll('_', ' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,6 +101,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
                     itemBuilder: (_, index) {
                       final b = bookings[index];
                       final status = b['status']?.toString();
+                      final paymentStatus =
+                          b['paymentStatus']?.toString() ?? 'UNPAID';
+                      final paymentColor =
+                          paymentStatusColor(paymentStatus);
 
                       return Card(
                         child: ListTile(
@@ -92,15 +120,65 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             b['customerName'] ?? 'Customer Booking',
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
-                          subtitle: Text(
-                            '${b['customerPhone'] ?? ''}\n${b['pickupDate'] ?? ''} | ${b['pickupTimeSlot'] ?? ''}\nStore: ${b['storeName'] ?? 'Not assigned'} | Rider: ${b['riderName'] ?? 'Not assigned'}',
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${b['customerPhone'] ?? ''}\n'
+                                  '${b['pickupDate'] ?? ''} | ${b['pickupTimeSlot'] ?? ''}\n'
+                                  'Store: ${b['storeName'] ?? 'Not assigned'} | '
+                                  'Rider: ${b['riderName'] ?? 'Not assigned'}',
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 6,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 9,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: paymentColor.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        paymentStatus.replaceAll('_', ' '),
+                                        style: TextStyle(
+                                          color: paymentColor,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      'Received: ${formatAmount(b['amountPaid'])}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Mode: ${formatPaymentMode(b['paymentMode'])}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '₹${b['estimatedAmount'] ?? 0}',
+                                formatAmount(b['estimatedAmount']),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w900,
                                   color: AppTheme.primary,
