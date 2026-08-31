@@ -61,6 +61,24 @@ class _AdminPickupRequestsScreenState extends State<AdminPickupRequestsScreen> {
     }
   }
 
+  String formatAmount(dynamic value) {
+    final amount = value is num
+        ? value.toDouble()
+        : double.tryParse(value?.toString() ?? '') ?? 0.0;
+    return '₹${amount.toStringAsFixed(2)}';
+  }
+
+  Color paymentStatusColor(String? status) {
+    switch (status?.toUpperCase()) {
+      case 'PAID':
+        return Colors.green;
+      case 'PARTIALLY_PAID':
+        return Colors.orange;
+      default:
+        return Colors.red;
+    }
+  }
+
   void _showAssignDialog(String bookingId) {
     showDialog(
       context: context,
@@ -125,6 +143,10 @@ class _AdminPickupRequestsScreenState extends State<AdminPickupRequestsScreen> {
                         itemBuilder: (_, index) {
                           final r = requests[index];
                           final id = r['id']?.toString() ?? '';
+                          final paymentStatus =
+                              r['paymentStatus']?.toString() ?? 'UNPAID';
+                          final paymentColor =
+                              paymentStatusColor(paymentStatus);
 
                           return Card(
                             elevation: 2,
@@ -152,6 +174,50 @@ class _AdminPickupRequestsScreenState extends State<AdminPickupRequestsScreen> {
                                         const SizedBox(height: 4),
                                         Text('Date: ${r['pickupDate']} | Time: ${r['pickupTimeSlot']}'),
                                         Text('Address: ${r['pickupAddress']}'),
+                                        const SizedBox(height: 8),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 6,
+                                          children: [
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 9,
+                                                vertical: 5,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: paymentColor.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Text(
+                                                paymentStatus.replaceAll(
+                                                  '_',
+                                                  ' ',
+                                                ),
+                                                style: TextStyle(
+                                                  color: paymentColor,
+                                                  fontWeight: FontWeight.w800,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                            Text(
+                                              'Received: ${formatAmount(r['amountPaid'])}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Mode: ${(r['paymentMode'] ?? 'Not selected').toString().replaceAll('_', ' ')}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                         if (r['specialInstructions'] != null && r['specialInstructions'].toString().isNotEmpty)
                                           Text('Note: ${r['specialInstructions']}', style: const TextStyle(fontStyle: FontStyle.italic)),
                                       ],
@@ -161,7 +227,7 @@ class _AdminPickupRequestsScreenState extends State<AdminPickupRequestsScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
-                                        'Est: ₹${r['estimatedAmount'] ?? 0}',
+                                        'Est: ${formatAmount(r['estimatedAmount'])}',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w900,
                                           color: AppTheme.primary,
