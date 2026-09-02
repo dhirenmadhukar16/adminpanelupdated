@@ -94,7 +94,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Good Morning, Devansh 👋',
+                    const Text('Good Morning, Whitefox 👋',
                         style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -138,7 +138,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                     const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Good Morning, Devansh 👋',
+                        Text('Good Morning, whitefox 👋',
                             style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,

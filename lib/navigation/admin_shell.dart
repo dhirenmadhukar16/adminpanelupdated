@@ -29,6 +29,8 @@ import '../auth/screens/admin_login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../cashcollection/screens/admin_cash_collection_screen.dart';
 import '../bookings/screens/admin_pickup_requests_screen.dart';
+import '../orders/screens/admin_daily_orders_screen.dart';
+import '../customers/screens/admin_customer_activity_screen.dart';
 
 class AdminShell extends ConsumerWidget {
   const AdminShell({super.key});
@@ -50,6 +52,11 @@ class AdminShell extends ConsumerWidget {
       'screen': const AdminCustomersCRM()
     },
     {
+      'title': 'Customer Activity',
+      'icon': Icons.insights_rounded,
+      'screen': const AdminCustomerActivityScreen()
+    },
+    {
       'title': 'Riders',
       'icon': Icons.electric_moped_rounded,
       'screen': const AdminRidersMapScreen()
@@ -58,6 +65,11 @@ class AdminShell extends ConsumerWidget {
       'title': 'Orders',
       'icon': Icons.receipt_long_rounded,
       'screen': const AdminOrdersKanban()
+    },
+    {
+      'title': 'Daily Orders',
+      'icon': Icons.today_rounded,
+      'screen': const AdminDailyOrdersScreen()
     },
     {
       'title': 'Services & Pricing',
