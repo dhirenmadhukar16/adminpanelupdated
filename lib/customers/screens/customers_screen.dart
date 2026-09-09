@@ -17,6 +17,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
   List customers = [];
   Set<String> selectedIds = {};
 
+  String _displayPhone(dynamic value) {
+    final phone = value?.toString().trim() ?? '';
+    return phone.isEmpty ? 'Phone unavailable' : phone;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -178,7 +183,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     Text(
-                                      c['phone'] ?? '',
+                                      _displayPhone(c['phone']),
                                       style: const TextStyle(
                                           fontSize: 12,
                                           color: AppTheme.mutedText),

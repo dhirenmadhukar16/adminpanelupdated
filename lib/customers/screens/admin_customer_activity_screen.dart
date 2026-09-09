@@ -110,16 +110,25 @@ class _AdminCustomerActivityScreenState
       if (_status != 'ALL' && customer['activityStatus'] != _status) {
         return false;
       }
-      if (query.isEmpty) return true;
-      return [
-        customer['customerName'],
-        customer['phone'],
-        customer['email'],
-        customer['address'],
-        customer['lastStoreName'],
-      ].any(
-          (value) => value?.toString().toLowerCase().contains(query) ?? false);
+      return _matchesCustomer(customer, query);
     }).toList();
+  }
+
+  bool _matchesCustomer(Map<String, dynamic> customer, String query) {
+    if (query.isEmpty) return true;
+
+    final digits = query.replaceAll(RegExp(r'\D'), '');
+    if (digits.isNotEmpty) {
+      final last4 = customer['phoneLast4']?.toString() ?? '';
+      final displayedPhone = customer['phone']?.toString() ?? '';
+      return last4 == digits || displayedPhone.endsWith(digits);
+    }
+
+    return [
+      customer['customerName'],
+      customer['email'],
+      customer['lastStoreName'],
+    ].any((value) => value?.toString().toLowerCase().contains(query) ?? false);
   }
 
   String _date(dynamic value) {
@@ -264,7 +273,7 @@ class _AdminCustomerActivityScreenState
           child: TextField(
             controller: _searchController,
             decoration: const InputDecoration(
-              labelText: 'Search name, mobile or email',
+              labelText: 'Search name, email or last 4 digits',
               prefixIcon: Icon(Icons.search_rounded),
               border: OutlineInputBorder(),
             ),

@@ -17,6 +17,11 @@ class _AdminCustomerDetailScreenState extends State<AdminCustomerDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  String get _displayPhone {
+    final phone = widget.customer['phone']?.toString().trim() ?? '';
+    return phone.isEmpty ? 'Phone unavailable' : phone;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -69,7 +74,7 @@ class _AdminCustomerDetailScreenState extends State<AdminCustomerDetailScreen>
                         const SizedBox(height: 8),
                         Text(widget.customer['email'] ?? 'No email',
                             style: const TextStyle(color: AppTheme.mutedText)),
-                        Text(widget.customer['phone'] ?? 'No phone',
+                        Text(_displayPhone,
                             style: const TextStyle(color: AppTheme.mutedText)),
                       ],
                     ),

@@ -31,6 +31,8 @@ import '../cashcollection/screens/admin_cash_collection_screen.dart';
 import '../bookings/screens/admin_pickup_requests_screen.dart';
 import '../orders/screens/admin_daily_orders_screen.dart';
 import '../customers/screens/admin_customer_activity_screen.dart';
+import '../riders/screens/admin_rider_cash_screen.dart';
+import '../packages/screens/admin_packages_screen.dart';
 
 class AdminShell extends ConsumerWidget {
   const AdminShell({super.key});
@@ -77,6 +79,11 @@ class AdminShell extends ConsumerWidget {
       'screen': const AdminGarmentsScreen()
     },
     {
+      'title': 'Customer Packages',
+      'icon': Icons.inventory_2_rounded,
+      'screen': const AdminPackagesScreen()
+    },
+    {
       'title': 'Trucks',
       'icon': Icons.local_shipping_rounded,
       'screen': const AdminTrucksScreen()
@@ -85,6 +92,11 @@ class AdminShell extends ConsumerWidget {
       'title': 'Cash Collection',
       'icon': Icons.payments_rounded,
       'screen': const AdminCashCollectionScreen()
+    },
+    {
+      'title': 'Rider Cash',
+      'icon': Icons.account_balance_wallet_rounded,
+      'screen': const AdminRiderCashScreen()
     },
   ];
 

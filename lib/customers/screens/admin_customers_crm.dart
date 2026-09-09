@@ -14,11 +14,60 @@ final crmProvider = FutureProvider<List<dynamic>>((ref) async {
   }
 });
 
-class AdminCustomersCRM extends ConsumerWidget {
+class AdminCustomersCRM extends ConsumerStatefulWidget {
   const AdminCustomersCRM({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminCustomersCRM> createState() => _AdminCustomersCRMState();
+}
+
+class _AdminCustomersCRMState extends ConsumerState<AdminCustomersCRM> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController
+      ..removeListener(_onSearchChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    if (mounted) setState(() {});
+  }
+
+  List<dynamic> _filterCustomers(List<dynamic> customers) {
+    final query = _searchController.text.trim().toLowerCase();
+    if (query.isEmpty) return customers;
+
+    final digits = query.replaceAll(RegExp(r'\D'), '');
+    return customers.where((raw) {
+      if (raw is! Map) return false;
+      final customer = Map<String, dynamic>.from(raw);
+
+      if (digits.isNotEmpty) {
+        final last4 = customer['phoneLast4']?.toString() ?? '';
+        final displayedPhone = customer['phone']?.toString() ?? '';
+        return last4 == digits || displayedPhone.endsWith(digits);
+      }
+
+      return [
+        customer['name'],
+        customer['email'],
+        customer['customerCode']
+      ].any(
+          (value) => value?.toString().toLowerCase().contains(query) ?? false);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final crmAsync = ref.watch(crmProvider);
 
     return Scaffold(
@@ -49,9 +98,10 @@ class AdminCustomersCRM extends ConsumerWidget {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: const Color(0xFFE2E8F0))),
-                      child: const TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search customers...',
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: const InputDecoration(
+                          hintText: 'Search name, email or last 4 digits',
                           prefixIcon:
                               Icon(Icons.search, color: AppTheme.mutedText),
                           border: InputBorder.none,
@@ -123,17 +173,18 @@ class AdminCustomersCRM extends ConsumerWidget {
                               child: Text('Error: $err',
                                   style: const TextStyle(color: Colors.red))),
                           data: (customers) {
-                            if (customers.isEmpty) {
+                            final visibleCustomers =
+                                _filterCustomers(customers);
+                            if (visibleCustomers.isEmpty) {
                               return const Center(
-                                  child:
-                                      Text('No customers found in database.'));
+                                  child: Text('No matching customers found.'));
                             }
                             return ListView.separated(
-                              itemCount: customers.length,
+                              itemCount: visibleCustomers.length,
                               separatorBuilder: (_, __) => const Divider(
                                   height: 1, color: Color(0xFFE2E8F0)),
                               itemBuilder: (context, index) {
-                                final c = customers[index];
+                                final c = visibleCustomers[index];
 
                                 // Use real CRM metrics
                                 final ltvVal = c['lifetimeValue'] ?? 0;
@@ -194,7 +245,9 @@ class AdminCustomersCRM extends ConsumerWidget {
                                                   style: const TextStyle(
                                                       color: AppTheme.navy,
                                                       fontSize: 13)),
-                                              Text(c['phone'] ?? 'No phone',
+                                              Text(
+                                                  c['phone']?.toString() ??
+                                                      'Phone unavailable',
                                                   style: const TextStyle(
                                                       color: AppTheme.mutedText,
                                                       fontSize: 12)),
