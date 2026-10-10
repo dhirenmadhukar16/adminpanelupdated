@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_theme.dart';
+import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -13,7 +14,7 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen> {
   bool loading = true;
   String? error;
-  List orders = [];
+  List<Map<String, dynamic>> orders = [];
 
   @override
   void initState() {
@@ -22,18 +23,27 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Future<void> loadOrders() async {
-    try {
-      setState(() {
-        loading = true;
-        error = null;
-      });
+    if (!mounted) return;
 
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
+    try {
       final response = await ApiClient.dio.get('/api/admin-panel/orders');
 
+      final loadedOrders = (response.data as List)
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
+
+      if (!mounted) return;
+
       setState(() {
-        orders = response.data as List;
+        orders = loadedOrders;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => error = e.toString());
     } finally {
       if (mounted) setState(() => loading = false);
@@ -47,6 +57,28 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return AppTheme.primary;
   }
 
+  Future<void> openOrder(Map<String, dynamic> order) async {
+    final orderId = order['id']?.toString();
+
+    if (orderId == null || orderId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Order ID is missing. Please refresh and try again.'),
+        ),
+      );
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OrderDetailScreen(orderId: orderId),
+      ),
+    );
+
+    if (mounted) await loadOrders();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,7 +89,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
         actions: [
-          IconButton(onPressed: loadOrders, icon: const Icon(Icons.refresh)),
+          IconButton(
+            onPressed: loading ? null : loadOrders,
+            tooltip: 'Refresh orders',
+            icon: const Icon(Icons.refresh),
+          ),
           const SizedBox(width: 16),
         ],
       ),
@@ -65,13 +101,31 @@ class _OrdersScreenState extends State<OrdersScreen> {
           ? const Center(child: CircularProgressIndicator())
           : error != null
               ? Center(
-                  child:
-                      Text(error!, style: const TextStyle(color: Colors.red)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          error!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: loadOrders,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
                 )
               : orders.isEmpty
                   ? const Center(
-                      child: Text("No orders found.",
-                          style: TextStyle(color: AppTheme.mutedText)),
+                      child: Text(
+                        'No orders found.',
+                        style: TextStyle(color: AppTheme.mutedText),
+                      ),
                     )
                   : Padding(
                       padding: const EdgeInsets.all(24),
@@ -79,20 +133,19 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         itemCount: orders.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (_, index) {
-                          final o = orders[index];
-                          final status = o['status']?.toString();
+                          final order = orders[index];
+                          final status = order['status']?.toString();
+                          final delivered = status == 'DELIVERED';
 
                           return Card(
-                            color: status == 'DELIVERED'
-                                ? const Color(0xFFECFDF5)
-                                : null,
+                            color: delivered ? const Color(0xFFECFDF5) : null,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                               side: BorderSide(
-                                color: status == 'DELIVERED'
+                                color: delivered
                                     ? Colors.green.shade400
                                     : Colors.transparent,
-                                width: status == 'DELIVERED' ? 1.5 : 0,
+                                width: delivered ? 1.5 : 0,
                               ),
                             ),
                             child: ListTile(
@@ -105,36 +158,36 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 ),
                               ),
                               title: Text(
-                                o['orderNumber'] ?? 'Order',
+                                order['orderNumber']?.toString() ?? 'Order',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: status == 'DELIVERED'
+                                  color: delivered
                                       ? Colors.green.shade900
                                       : Colors.black,
                                 ),
                               ),
                               subtitle: Text(
-                                  '${o['customerName'] ?? ''} • ${o['storeName'] ?? ''}'),
-                              trailing: status == 'DELIVERED'
-                                  ? const Icon(Icons.check_circle,
-                                      color: Colors.green)
+                                '${order['customerName'] ?? ''} • '
+                                '${order['storeName'] ?? ''}',
+                              ),
+                              trailing: delivered
+                                  ? const Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                    )
                                   : Chip(
                                       label: Text(
                                         status ?? 'UNKNOWN',
                                         style: TextStyle(
-                                            color: statusColor(status),
-                                            fontSize: 10),
+                                          color: statusColor(status),
+                                          fontSize: 10,
+                                        ),
                                       ),
                                       backgroundColor: statusColor(status)
                                           .withValues(alpha: 0.1),
                                       side: BorderSide.none,
                                     ),
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        OrderDetailScreen(order: o)),
-                              ),
+                              onTap: () => openOrder(order),
                             ),
                           );
                         },
