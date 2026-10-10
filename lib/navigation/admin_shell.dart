@@ -1,3 +1,4 @@
+import '../discounts/screens/discount_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:whitefox_admin_panel/navigation/providers/navigation_provider.dart';
@@ -52,6 +53,11 @@ class AdminShell extends ConsumerWidget {
       'title': 'Customers',
       'icon': Icons.people_alt_rounded,
       'screen': const AdminCustomersCRM()
+    },
+    {
+      'title': 'Store Discounts',
+      'icon': Icons.local_offer_outlined,
+      'screen': const DiscountHistoryScreen(adminMode: true)
     },
     {
       'title': 'Customer Activity',

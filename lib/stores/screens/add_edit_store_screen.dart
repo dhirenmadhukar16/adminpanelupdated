@@ -30,6 +30,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   late TextEditingController _latCtrl;
   late TextEditingController _lngCtrl;
 
+  bool _gstEnabled = true;
   bool _saving = false;
   bool _loadingStore = false;
   String? _error;
@@ -66,6 +67,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
   void initState() {
     super.initState();
     final s = widget.store;
+    _gstEnabled = s?['gstEnabled'] != false;
     _codeCtrl = TextEditingController(text: s?['storeCode'] ?? '');
     _nameCtrl =
         TextEditingController(text: s?['name'] ?? s?['storeName'] ?? '');
@@ -99,6 +101,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
       final fullStore = res.data;
       if (mounted) {
         setState(() {
+          _gstEnabled = fullStore['gstEnabled'] != false;
           _codeCtrl.text = fullStore['storeCode'] ?? _codeCtrl.text;
           _nameCtrl.text = fullStore['name'] ?? _nameCtrl.text;
           _adminNameCtrl.text =
@@ -147,6 +150,7 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
 
     try {
       final payload = {
+        'gstEnabled': _gstEnabled,
         'storeCode': _codeCtrl.text,
         'name': _nameCtrl.text,
         'storeAdminName': _adminNameCtrl.text,
@@ -266,6 +270,15 @@ class _AddEditStoreScreenState extends State<AddEditStoreScreen> {
                           style: const TextStyle(color: Colors.red),
                         ),
                       ),
+                    SwitchListTile(
+                      title: const Text('GST enabled'),
+                      subtitle:
+                          const Text('Apply GST to new orders for this store'),
+                      value: _gstEnabled,
+                      onChanged: _saving
+                          ? null
+                          : (value) => setState(() => _gstEnabled = value),
+                    ),
                     _buildField('Store Code', _codeCtrl, Icons.code),
                     const SizedBox(height: 16),
                     _buildField('Store Name', _nameCtrl, Icons.storefront),

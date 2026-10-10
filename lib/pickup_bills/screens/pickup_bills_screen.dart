@@ -80,8 +80,13 @@ class _PickupBillsScreenState extends State<PickupBillsScreen> {
                       final b = pickupBills[index];
                       final status = b['status']?.toString();
 
+                      final total = (b['totalAmount'] ?? 0).toDouble();
+                      final paid = (b['paidAmount'] ?? 0).toDouble();
+                      final remaining = (b['remainingAmount'] ?? 0).toDouble();
+                      final excess = (b['excessCreditAmount'] ?? 0).toDouble();
+
                       return Card(
-                        child: ListTile(
+                        child: ExpansionTile(
                           leading: CircleAvatar(
                             backgroundColor:
                                 statusColor(status).withValues(alpha: 0.15),
@@ -95,14 +100,14 @@ class _PickupBillsScreenState extends State<PickupBillsScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
                           subtitle: Text(
-                            '${b['customerName'] ?? ''} | Rider: ${b['riderName'] ?? ''}\nStore: ${b['storeName'] ?? ''}',
+                            '${b['customerName'] ?? ''} | Rider: ${b['riderName'] ?? ''}\nStore: ${b['storeName'] ?? ''} | ${b['paymentStatus'] ?? 'UNPAID'}',
                           ),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '₹${b['totalAmount'] ?? 0}',
+                                '₹${total.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w900,
                                   color: AppTheme.primary,
@@ -111,11 +116,62 @@ class _PickupBillsScreenState extends State<PickupBillsScreen> {
                               Text(status ?? ''),
                             ],
                           ),
+                          children: [
+                            const Divider(height: 1),
+                            Padding(
+                              padding: const EdgeInsets.all(18),
+                              child: Column(
+                                children: [
+                                  _amountRow('Final bill', total),
+                                  _amountRow('Already paid', paid),
+                                  _amountRow('Balance payable', remaining,
+                                      highlight: remaining > 0),
+                                  if (excess > 0)
+                                    _amountRow('Customer credit due', excess,
+                                        highlight: true, positive: true),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Customer approval'),
+                                      Text(
+                                        '${b['customerApprovalStatus'] ?? 'PENDING'}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w800),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     },
                   ),
                 ),
+    );
+  }
+
+  Widget _amountRow(String label, double amount,
+      {bool highlight = false, bool positive = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(
+            '₹${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontWeight: highlight ? FontWeight.w900 : FontWeight.w700,
+              color:
+                  highlight ? (positive ? Colors.green : Colors.orange) : null,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
